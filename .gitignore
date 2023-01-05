@@ -1,3 +1,4 @@
+.idea/
 /.idea/.gitignore
 /.idea/misc.xml
 /.idea/modules.xml
@@ -5,3 +6,8 @@
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/Scalable_ML_Project_AQ.iml
 /.idea/vcs.xml
+.hw_api_key
+model.pkl
+.env
+df_next_7_days.png
+**/__pycache__/**

@@ -1,0 +1,9 @@
+wheel
+typing-extensions
+hopsworks
+pandas
+requests
+scikit-learn
+modal-client
+python-dotenv
+dataframe_image

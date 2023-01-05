@@ -1,32 +1,86 @@
-import csv
-import urllib.request
-import sys
-import codecs
-import json
+import numpy as np
+import pandas as pd
+import requests
 
-def csv_reader(it):
-  for line in it:
-    yield line.strip().split(',')
 
-if __name__ == '__main__':
-  try:
-    ResultBytes = urllib.request.urlopen(
-      "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Paris?unitGroup=us&include=days&key=SC6YQNXSJZYPRJHRAGWK63GDC&contentType=csv")
-    # Parse the results as CSV
-    CSVText = csv.reader(codecs.iterdecode(ResultBytes, 'utf-8'))
-  except urllib.error.HTTPError as e:
-    ErrorInfo = e.read().decode()
-    print('Error code: ', e.code, ErrorInfo)
-    sys.exit()
-  except  urllib.error.URLError as e:
-    ErrorInfo = e.read().decode()
-    print('Error code: ', e.code, ErrorInfo)
-    sys.exit()
+def get_weather_json(city, date, WEATHER_API_KEY):
+    return requests.get(
+        f'https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city.lower()}/{date}?unitGroup=metric&include=days&key={WEATHER_API_KEY}&contentType=json').json()
 
-  list_of_lists = []
-  for row in CSVText:
-    list_of_lists.append(row)
-  with open('temp_file.csv', 'w', newline='', encoding='utf-8') as file_object:
-    writer_object = csv.writer(file_object)
-    for row in list_of_lists:
-      writer_object.writerow(row)
+
+def get_weather_data(city_name, date, WEATHER_API_KEY):
+    json = get_weather_json(city_name, date, WEATHER_API_KEY)
+
+    data_list = []
+    for data in json['days'][1:8]:
+        data_list.append([
+            data['datetime'],
+            data['tempmax'],
+            data['tempmin'],
+            data['temp'],
+            data['feelslikemax'],
+            data['feelslikemin'],
+            data['feelslike'],
+            data['dew'],
+            data['humidity'],
+            data['precip'],
+            data['precipprob'],
+            data['precipcover'],
+            data['snow'],
+            data['snowdepth'],
+            data['windgust'],
+            data['windspeed'],
+            data['winddir'],
+            data['pressure'],
+            data['cloudcover'],
+            data['visibility'],
+            data['solarradiation'],
+            data['solarenergy'],
+            np.nan
+        ])
+
+    return data_list
+
+
+def get_weather_df(city, date_today, WEATHER_API_KEY):
+    data_weather = get_weather_data(city, date_today, WEATHER_API_KEY)
+
+    col_names = [
+        'date',
+        'tempmax',
+        'tempmin',
+        'temp',
+        'feelslikemax',
+        'feelslikemin',
+        'feelslike',
+        'dew',
+        'humidity',
+        'precip',
+        'precipprob',
+        'precipcover',
+        'snow',
+        'snowdepth',
+        'windgust',
+        'windspeed',
+        'winddir',
+        'sealevelpressure',
+        'cloudcover',
+        'visibility',
+        'solarradiation',
+        'solarenergy',
+        'moonphase'
+    ]
+
+    new_data = pd.DataFrame(
+        data_weather,
+        columns=col_names
+    )
+    new_data['date'] = pd.to_datetime(new_data['date'])
+    new_data = new_data.astype({"date": str})
+    new_data["precipprob"] = new_data["precipprob"].astype('int64')
+
+    new_data = new_data.replace({' ': np.nan,
+                                 '-': np.nan}, regex=False)
+    new_data = new_data.fillna(0.0)
+
+    return new_data
