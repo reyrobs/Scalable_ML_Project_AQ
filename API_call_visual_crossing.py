@@ -12,7 +12,7 @@ def get_weather_data(city_name, date, WEATHER_API_KEY):
     json = get_weather_json(city_name, date, WEATHER_API_KEY)
 
     data_list = []
-    for data in json['days'][1:8]:
+    for data in json['days']:
         data_list.append([
             data['datetime'],
             data['tempmax'],
@@ -44,6 +44,9 @@ def get_weather_data(city_name, date, WEATHER_API_KEY):
 
 def get_weather_df(city, date_today, WEATHER_API_KEY):
     data_weather = get_weather_data(city, date_today, WEATHER_API_KEY)
+
+    if date_today == "":
+        data_weather = data_weather[1:8]  # Next 7 days
 
     col_names = [
         'date',
